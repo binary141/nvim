@@ -84,6 +84,8 @@ require("mason").setup({
         'gofumpt',
         'delve',
         'gopls',
+        'vue_ls',
+        'vtsls',
 
         'zls'
     },

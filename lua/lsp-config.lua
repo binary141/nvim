@@ -1,32 +1,37 @@
 -- used in the auto complete
-local luasnip = require 'luasnip'
+local luasnip = require("luasnip")
 
--- This will show inline diagnostics (errors, warnings, etc.)
+-----------------------------------------------------------------------
+-- Diagnostics UI
+-----------------------------------------------------------------------
+
 vim.diagnostic.config({
-  virtual_text = true,  -- Show diagnostics inline
-  signs = true,         -- Show diagnostic signs in the sign column
-  underline = true,     -- Underline the lines with errors
-  update_in_insert = true,  -- Update diagnostics while typing
+  virtual_text = true,
+  signs = true,
+  underline = true,
+  update_in_insert = true,
 })
 
--- configure how the auto complete works
-local cmp = require 'cmp'
-cmp.setup {
+-----------------------------------------------------------------------
+-- Completion (nvim-cmp)
+-----------------------------------------------------------------------
+
+local cmp = require("cmp")
+cmp.setup({
   snippet = {
     expand = function(args)
       luasnip.lsp_expand(args.body)
     end,
   },
   mapping = cmp.mapping.preset.insert({
-    ['<C-u>'] = cmp.mapping.scroll_docs(-4), -- Up
-    ['<C-d>'] = cmp.mapping.scroll_docs(4), -- Down
-    -- C-b (back) C-f (forward) for snippet placeholder navigation.
-    ['<C-Space>'] = cmp.mapping.complete(),
-    ['<CR>'] = cmp.mapping.confirm {
+    ["<C-u>"] = cmp.mapping.scroll_docs(-4),
+    ["<C-d>"] = cmp.mapping.scroll_docs(4),
+    ["<C-Space>"] = cmp.mapping.complete(),
+    ["<CR>"] = cmp.mapping.confirm({
       behavior = cmp.ConfirmBehavior.Replace,
       select = true,
-    },
-    ['<Tab>'] = cmp.mapping(function(fallback)
+    }),
+    ["<Tab>"] = cmp.mapping(function(fallback)
       if cmp.visible() then
         cmp.select_next_item()
       elseif luasnip.expand_or_jumpable() then
@@ -34,8 +39,8 @@ cmp.setup {
       else
         fallback()
       end
-    end, { 'i', 's' }),
-    ['<S-Tab>'] = cmp.mapping(function(fallback)
+    end, { "i", "s" }),
+    ["<S-Tab>"] = cmp.mapping(function(fallback)
       if cmp.visible() then
         cmp.select_prev_item()
       elseif luasnip.jumpable(-1) then
@@ -43,32 +48,118 @@ cmp.setup {
       else
         fallback()
       end
-    end, { 'i', 's' }),
+    end, { "i", "s" }),
   }),
   sources = {
-    { name = 'nvim_lsp' },
-    { name = 'luasnip' },
+    { name = "nvim_lsp" },
+    { name = "luasnip" },
   },
-}
+})
 
-require('lspconfig').lua_ls.setup({})
+-----------------------------------------------------------------------
+-- LSP CONFIGURATION (Neovim 0.11+)
+-----------------------------------------------------------------------
 
-require('lspconfig').clangd.setup({})
+-- Lua
+vim.lsp.config("lua_ls", {
+  settings = {
+    Lua = {
+      runtime = {
+        version = "LuaJIT",
+      },
+      diagnostics = {
+        globals = { "vim" },
+      },
+      workspace = {
+        library = vim.api.nvim_get_runtime_file("", true),
+        checkThirdParty = false,
+      },
+      telemetry = {
+        enable = false,
+      },
+    },
+  },
+})
 
-require('lspconfig').golangci_lint_ls.setup{}
--- require('lspconfig').goimports.setup{}
-require('lspconfig').gopls.setup{
+-- C / C++
+vim.lsp.config("clangd", {})
+
+-- Go
+vim.lsp.config("gopls", {
   settings = {
     gopls = {
       staticcheck = true,
-      completeUnimported = true, -- Enables completion for unimported functions
+      completeUnimported = true,
     },
   },
+})
+
+vim.lsp.config("golangci_lint_ls", {})
+
+local vue_language_server_path = vim.fn.stdpath("data") .. "/mason/packages/vue-language-server/node_modules/@vue/language-server"
+
+-- Filetypes for TS / JS / Vue
+local ts_filetypes = { "typescript", "javascript", "typescriptreact", "javascriptreact", "vue" }
+
+local vue_plugin = {
+  name = "@vue/typescript-plugin",
+  location = vue_language_server_path,
+  languages = { "vue" },
+  configNamespace = "typescript",
 }
 
-vim.cmd [[
-  autocmd BufWritePre *.go lua vim.lsp.buf.format({ async = false }) -- can't be async as that will interfere with the organize imports below
-  autocmd BufWritePre *.go lua vim.lsp.buf.code_action({ context = { only = { "source.organizeImports" } }, apply = true })
-]]
+-- TypeScript
+vim.lsp.config("vtsls", {
+  filetypes = ts_filetypes,
+  init_options = {
+    plugins = { vue_plugin },
+  },
+  settings = {
+    vtsls = {
+      tsserver = {
+        globalPlugins = { vue_plugin },
+      },
+    },
+  },
+  root_markers = {'tsconfig.json', 'tsconfig.app.json', 'package.json', 'jsconfig.json', '.git'},
+})
 
-require('lspconfig').zls.setup({})
+-- Vue
+-- vim.lsp.config("vue_ls", {
+--   filetypes = { "vue" },
+--   settings = {
+--         vue = {
+--             hybridMode = false,
+--             inlayHints = {
+--                 -- Enable specific inlay hints as needed
+--                 enabled = true,
+--                 -- ... other inlay hint settings
+--             },
+--         },
+--     },
+--   init_options = {
+--     takeOverMode = true, -- enables template -> script go-to-definition
+--   },
+-- })
+
+-- Zig
+vim.lsp.config("zls", {})
+
+-----------------------------------------------------------------------
+-- Enable servers
+-----------------------------------------------------------------------
+
+vim.lsp.enable({
+  "lua_ls",
+  "clangd",
+  "csharp_language_server",
+  "vtsls",
+  -- "vue_ls",
+  "gopls",
+  "golangci_lint_ls",
+  "goimports",
+  "zls",
+})
+
+----------------------------------
+

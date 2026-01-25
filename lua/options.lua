@@ -31,7 +31,6 @@ local ft_space_settings = {
   java       = 4,
   rust       = 4,
   sh         = 4,
-  make       = 4,
   cmake      = 4,
   vim        = 4,
   php        = 4,
@@ -39,6 +38,7 @@ local ft_space_settings = {
   -- file types that use actual tabs
   go         = "tab",
   dockerfile = "tab",
+  make       = "tab",
 }
 
 for ft, setting in pairs(ft_space_settings) do
