@@ -161,5 +161,17 @@ vim.lsp.enable({
   "zls",
 })
 
-----------------------------------
+-----------------------------------------------------------------------
+-- Go format + organize imports on save
+-----------------------------------------------------------------------
 
+vim.api.nvim_create_autocmd("BufWritePre", {
+  pattern = "*.go",
+  callback = function()
+    vim.lsp.buf.format({ async = false })
+    vim.lsp.buf.code_action({
+      context = { only = { "source.organizeImports" } },
+      apply = true,
+    })
+  end,
+})
