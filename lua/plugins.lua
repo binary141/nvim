@@ -61,7 +61,7 @@ require('lazy').setup({
     },
 
     -- Treesitter with lazy load and update
-    { 'nvim-treesitter/nvim-treesitter', run = ':TSUpdate' },
+    { 'nvim-treesitter/nvim-treesitter', branch = 'main', build = ':TSUpdate' },
 
     -- Telescope
     { 'nvim-telescope/telescope.nvim', cmd = 'Telescope' },
